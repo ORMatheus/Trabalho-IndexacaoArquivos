@@ -1,7 +1,13 @@
 #include <iostream>
+#include <fstream>
 #include <string>
+#include <vector>
 #include <filesystem>
 #include <unordered_map>
+#include <unordered_set>
+#include <algorithm>
+#include <sstream>
+namespace fs = std::filesystem;
 using namespace std;
 
 class helper{
@@ -53,7 +59,7 @@ class indexer{
 
 };
 
-class serializer{
+class Serializer{
     void saveIndece();
     void loadIndice();
 };
