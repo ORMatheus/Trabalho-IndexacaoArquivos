@@ -63,16 +63,14 @@ class indexer{
     public:
     //metodo para obter o Id
     int getId(string nomedoArquivo){
-        if(nomeParaId.find(nomedoArquivo) == nomedoArquivo.end()){ //significa que o arquivo ainda nao tem um id e precisa ser criado
-            nomeParaId[nomedoArquivo]= contadorId++;
+        if(nomeParaId.find(nomedoArquivo)== nomeParaId.end() ){ //significa que o arquivo ainda nao tem um id e precisa ser criado
+            nomeParaId[nomedoArquivo]=contadorId++;
         }
         return nomeParaId[nomedoArquivo];
     }
 
-    //fazer a normalização das strings dentro do arquivo 
+    //salvar na hash 
     
-
-
     
 };
 
