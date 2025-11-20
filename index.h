@@ -52,13 +52,34 @@ class textProcessor{
 //Matheus
 class indexer{
     private:
+    //A tabela hashprincipal que esta guardando o arquivo ID e trazendo para palavras
     unordered_map<int, vector<string>> tabelaHash;
-
+    //tabela hash auxiliar para guardar o nome do arquivo vs ID (Simulando a classe Index)
     unordered_map<string,int> nomeParaId;
     int contadorId=1;
+    //tabela hash para guardar as stopwords
+    unordered_set<string> stopwords = {"a", "o", "de", "para", "com", "um", "uma", "os", "as", "e", "do", "da"};
 
+    public:
+    //metodo para obter o Id
+    int getId(string nomedoArquivo){
+        if(nomeParaId.find(nomedoArquivo) == nomedoArquivo.end()){ //significa que o arquivo ainda nao tem um id e precisa ser criado
+            nomeParaId[nomedoArquivo]= contadorId++;
+        }
+        return nomeParaId[nomedoArquivo];
+    }
+
+    //fazer a normalização das strings dentro do arquivo 
+    
+
+
+    
 };
 
+//void lerArquivos(); // catalogar arquivo por arquivo 
+//void processarTexto(); //realizar a normalização do texto dentro do arquivo.
+//int getId(); // pegar o id do index
+//void saveOnHash(); //salvar o arquivo ja tratado e salva-lo na hash.
 class Serializer{
     void saveIndece();
     void loadIndice();
