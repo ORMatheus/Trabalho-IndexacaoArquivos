@@ -1,58 +1,31 @@
-#include "index.h"      // ou o nome do seu arquivo .h onde está a classe TextProcessor
 #include <iostream>
-#include <fstream>
-#include <filesystem>
-#include <string>
-namespace fs =filesystem;
+#include "index.h"
+
+using namespace std;
+
 int main() {
-    // 1. Cria o TextProcessor (vai tentar carregar stopwords.txt)
-    TextProcessor tp("stopwords.txt");
+    Indexer indexer;
+    Serializer serializer;
 
-    // 2. Texto de teste (pode colar direto do exemplo do PDF)
-    std::string texto = 
-        "O gato está comendo no telhado!!!\n"
-        "O cachorro está comendo no quintal.\n"
-        "Está um dia lindo, né?";
+    // 1. Tenta carregar dados antigos (Persistência)
+    serializer.loadIndex(indexer, "indice.dat");
 
-    std::cout << "=== TEXTO ORIGINAL ===\n";
-    std::cout << texto << "\n\n";
-
-    // 3. Processa o texto
-    std::vector<std::string> palavras = tp.process(texto);
-
-    // 4. Mostra o resultado
-    std::cout << "=== PALAVRAS PROCESSADAS (sem stop words e limpas) ===\n";
-    if (palavras.empty()) {
-        std::cout << "(nenhuma palavra encontrada - talvez stopwords.txt esteja faltando?)\n";
+    // 2. Processa novos arquivos
+    // ATENÇÃO: Certifique-se de que esta pasta existe!
+    string pastaAlvo = "./arquivos_teste";
+    
+    // Verifica antes de chamar para evitar crash se a pasta não existir
+    if (fs::exists(pastaAlvo)) {
+        indexer.lerArquivos(pastaAlvo);
     } else {
-        for (const auto& p : palavras) {
-            std::cout << p << "\n";
-        }
+        cout << "Aviso: Crie a pasta '" << pastaAlvo << "' e coloque arquivos .txt nela." << endl;
     }
 
-    // 5. Teste extra: lendo um arquivo .txt real (opcional)
-    std::cout << "\n\n=== TESTANDO COM ARQUIVO REAL ===\n";
-    std::ifstream arquivo("doc1.txt");  // cria um doc1.txt na pasta do projeto pra testar
-    if (arquivo) {
-        std::string conteudo((std::istreambuf_iterator<char>(arquivo)),
-                              std::istreambuf_iterator<char>());
-        auto palavras_arquivo = tp.process(conteudo);
-        std::cout << "Palavras encontradas em doc1.txt:\n";
-        for (const auto& p : palavras_arquivo) {
-            std::cout << p << " ";
-        }
-        std::cout << "\n";
-    } else {
-        std::cout << "Crie um arquivo 'doc1.txt' na mesma pasta pra testar leitura de arquivo.\n";
-    }
+    // 3. Mostra o que temos na memória
+    indexer.imprimirEstado();
 
+    // 4. Salva tudo no disco antes de encerrar
+    serializer.saveIndex(indexer, "indice.dat");
 
-    Indexer meuIndexer;
-    
-    // Certifica-te de ter esta pasta criada com arquivos .txt dentro
-    meuIndexer.lerArquivos("/.stopwords.txt");
-    
-    meuIndexer.imprimirTudo();
-    system("Pauase");
     return 0;
 }
