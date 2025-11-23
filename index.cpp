@@ -86,20 +86,6 @@ void Indexer::lerPasta(const string& caminhoPasta) {
 
 //  INVERTED INDEX
 
-// Constrói o índice invertido: termo → {id → freq}
-void InvertedIndex::construir(const Indexer& idx) {
-    for (const auto& par : idx.palavrasPorId) {
-        int id = par.first;
-
-        // "par.second" é o vector de palavras do arquivo
-        for (const string& termo : par.second) {
-            indice[termo][id]++;  // soma 1 à frequência
-        }
-    }
-
-    std::cout << "Índice invertido construído.\n";
-}
-
 // Realiza busca simples com soma de frequências
 void InvertedIndex::buscar(const vector<string>& termos,
                            const Indexer& idx) {

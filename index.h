@@ -75,7 +75,7 @@ class Indexer{
 //  Índice invertido = palavra → lista de (idArquivo, frequência)
 //  Permite encontrar arquivos rapidamente a partir de uma palavra.
 
-class InvertedText{
+class InvertedIndex{
     public:
     unordered_map<string, unordered_map<int,int>> indice; //uma tabela hash de chave e valor que possui uma string e outra tabela hash de int,int
     
