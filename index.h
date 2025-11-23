@@ -84,5 +84,18 @@ class InvertedText{
     void buscar(const vector<string> &termos, const Indexer& indexador);
 };
 
+//fazer o serializer 
+// método responsável por carregar o indexer e salvar em um arquivo binario
+//Isso permite que o programa seja fechado e aberto sem perder o índice.
+
+class Serializer {
+    public:
+    static void salvar(const Indexer& idx, const string& nomeArq);
+    static void carregar(Indexer&idx , const string& nomeArq);
+
+    private:
+    static void writeString(std::offstream& out , const string& s);
+    static string readString(std::ifstream&in);
+};
 
 #endif
