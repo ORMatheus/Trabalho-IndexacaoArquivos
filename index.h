@@ -94,8 +94,8 @@ class Serializer {
     static void carregar(Indexer&idx , const string& nomeArq);
 
     private:
-    static void writeString(std::offstream& out , const string& s);
-    static string readString(std::ifstream&in);
+    static void writeString(std::ofstream& out, const string& s);
+    static string readString(std::ifstream& in);
 };
 
 #endif
