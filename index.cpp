@@ -45,4 +45,41 @@ vector<string> TextProcessor::separarPalavras(const string& s) {
 }
 
 
+Indexer::Indexer()
+    : proximoId(1),               // Começa IDs no número 1
+      processador("stopwords.txt")   // Carrega stopwords automaticamente
+{
+}
 
+// Retorna ID do arquivo. Se não existir, cria um novo.
+int Indexer::pegarId(const string& nomeArq) {
+    if (nomeParaId.count(nomeArq) == 0) {
+        nomeParaId[nomeArq] = proximoId++;
+    }
+    return nomeParaId[nomeArq];
+}
+
+// Lê todos os arquivos do diretório
+void Indexer::lerPasta(const string& caminhoPasta) {
+    for (const auto& item : fs::directory_iterator(caminhoPasta)) {
+        if (!item.is_regular_file()) continue;
+
+        string nomeArquivo = item.path().filename().string();
+        int id = pegarId(nomeArquivo);
+
+        std::ifstream arquivo(item.path());
+        string linha;
+
+        while (std::getline(arquivo, linha)) {
+            // Processa cada linha usando TextProcessor
+            vector<string> palavras = processador.processarLinha(linha);
+
+            // Adiciona as palavras ao id
+            for (const string& p : palavras) {
+                palavrasPorId[id].push_back(p);
+            }
+        }
+
+        std::cout << "Arquivo indexado: " << nomeArquivo << "\n";
+    }
+}
