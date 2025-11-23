@@ -2,23 +2,22 @@
 
 //construtor do textProcessor :le o arquivo stopwords primeiro e insere no conjuto 
 
-TextProcessor::TextProcessor(const string& stopwordsFile){
-    std::ifstream arq(stopwordsFile); //pega a lista de palavras que estão em stop stods
+TextProcessor::TextProcessor(const string& stopwordsFile) {
+    std::ifstream arq(stopwordsFile);
     string palavra;
 
-    while(std::getline(arq,palavra)){
+    while (std::getline(arq, palavra)) {
         stopwords.insert(palavra);
     }
 }
 
-
 //converter a string inteira para minuscula
-string TextProcessor::minuscula(const string& s){
-    string out=s;
-    for(char &c: out ){
-        c=std::tolower(c);
+string TextProcessor::minuscula(const string& s) {
+    string out = s;
+    for (char& c : out) {
+        c = std::tolower(c);
     }
-    return out ;
+    return out;
 }
 
 //trocar qualquer pontuação por um espaço
@@ -44,12 +43,29 @@ vector<string> TextProcessor::separarPalavras(const string& s) {
     return result;
 }
 
+// Processa uma linha completa: limpa, divide e remove stopwords
+vector<string> TextProcessor::processarLinha(const string& linha) {
+    string limpa = removerPontuacao(minuscula(linha));
+    vector<string> palavras = separarPalavras(limpa);
 
+    vector<string> resultado;
+
+    // Remove stopwords
+    for (const string& p : palavras) {
+        if (stopwords.count(p) == 0) {
+            resultado.push_back(p);
+        }
+    }
+    return resultado;
+}
+
+//indexer
 Indexer::Indexer()
     : proximoId(1),               // Começa IDs no número 1
       processador("stopwords.txt")   // Carrega stopwords automaticamente
 {
 }
+
 
 // Retorna ID do arquivo. Se não existir, cria um novo.
 int Indexer::pegarId(const string& nomeArq) {
@@ -58,6 +74,7 @@ int Indexer::pegarId(const string& nomeArq) {
     }
     return nomeParaId[nomeArq];
 }
+
 
 // Lê todos os arquivos do diretório
 void Indexer::lerPasta(const string& caminhoPasta) {
@@ -83,8 +100,21 @@ void Indexer::lerPasta(const string& caminhoPasta) {
         std::cout << "Arquivo indexado: " << nomeArquivo << "\n";
     }
 }
-
 //  INVERTED INDEX
+
+// Realiza busca simples com soma de frequências
+void InvertedIndex::construir(const Indexer& idx) {
+    for (const auto& par : idx.palavrasPorId) {
+        int id = par.first;
+
+        // "par.second" é o vector de palavras do arquivo
+        for (const string& termo : par.second) {
+            indice[termo][id]++;  // soma 1 à frequência
+        }
+    }
+
+    std::cout << "Índice invertido construído.\n";
+}
 
 // Realiza busca simples com soma de frequências
 void InvertedIndex::buscar(const vector<string>& termos,
@@ -111,5 +141,96 @@ void InvertedIndex::buscar(const vector<string>& termos,
                           << " (score: " << par.second << ")\n";
             }
         }
+    }
+}
+//  SERIALIZADOR
+
+// Escreve string em binário
+void Serializer::writeString(std::ofstream& out, const string& s) {
+    size_t len = s.size();
+    out.write((char*)&len, sizeof(len));
+    out.write(s.c_str(), len);
+}
+
+// Lê string em binário
+string Serializer::readString(std::ifstream& in) {
+    size_t len;
+    in.read((char*)&len, sizeof(len));
+
+    string s(len, '\0');
+    in.read(&s[0], len);
+
+    return s;
+}
+
+// Salva todo o conteúdo do Indexer em arquivo binário
+void Serializer::salvar(const Indexer& idx, const string& nomeArq) {
+    std::ofstream out(nomeArq, std::ios::binary);
+
+    // 1) Salva nomeParaId
+    size_t size1 = idx.nomeParaId.size();
+    out.write((char*)&size1, sizeof(size1));
+
+    for (const auto& par : idx.nomeParaId) {
+        writeString(out, par.first);
+        out.write((char*)&par.second, sizeof(int));
+    }
+
+    // 2) Salva palavrasPorId
+    size_t size2 = idx.palavrasPorId.size();
+    out.write((char*)&size2, sizeof(size2));
+
+    for (const auto& par : idx.palavrasPorId) {
+        out.write((char*)&par.first, sizeof(int));
+
+        size_t qtd = par.second.size();
+        out.write((char*)&qtd, sizeof(qtd));
+
+        for (const string& p : par.second) {
+            writeString(out, p);
+        }
+    }
+}
+
+// Carrega o Indexer salvo anteriormente
+void Serializer::carregar(Indexer& idx, const string& nomeArq) {
+    std::ifstream in(nomeArq, std::ios::binary);
+
+    if (!in.is_open()) {
+        std::cout << "Nenhum índice encontrado.\n";
+        return;
+    }
+
+    idx.nomeParaId.clear();
+    idx.palavrasPorId.clear();
+
+    // 1) Lê nomeParaId
+    size_t size1;
+    in.read((char*)&size1, sizeof(size1));
+
+    for (size_t i = 0; i < size1; i++) {
+        string nome = readString(in);
+        int id;
+        in.read((char*)&id, sizeof(int));
+        idx.nomeParaId[nome] = id;
+    }
+
+    // 2) Lê palavrasPorId
+    size_t size2;
+    in.read((char*)&size2, sizeof(size2));
+
+    for (size_t i = 0; i < size2; i++) {
+        int id;
+        in.read((char*)&id, sizeof(id));
+
+        size_t qtd;
+        in.read((char*)&qtd, sizeof(qtd));
+
+        vector<string> lista;
+        for (size_t j = 0; j < qtd; j++) {
+            lista.push_back(readString(in));
+        }
+
+        idx.palavrasPorId[id] = lista;
     }
 }

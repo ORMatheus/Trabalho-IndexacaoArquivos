@@ -1,58 +1,44 @@
-#include "index.h"      // ou o nome do seu arquivo .h onde está a classe TextProcessor
-#include <iostream>
-#include <fstream>
-#include <filesystem>
-#include <string>
-namespace fs =filesystem;
+#include "index.h"
+
 int main() {
-    // 1. Cria o TextProcessor (vai tentar carregar stopwords.txt)
-    TextProcessor tp("stopwords.txt");
 
-    // 2. Texto de teste (pode colar direto do exemplo do PDF)
-    std::string texto = 
-        "O gato está comendo no telhado!!!\n"
-        "O cachorro está comendo no quintal.\n"
-        "Está um dia lindo, né?";
+    // Cria indexador
+    Indexer indexador;
 
-    std::cout << "=== TEXTO ORIGINAL ===\n";
-    std::cout << texto << "\n\n";
+    // Carrega do disco caso exista
+    Serializer::carregar(indexador, "index.bin");
 
-    // 3. Processa o texto
-    std::vector<std::string> palavras = tp.process(texto);
+    // Pergunta pasta ao usuário
+    std::cout << "Digite a pasta dos arquivos (enter = ./docs): ";
+    string pasta;
+    std::getline(std::cin, pasta);
+    if (pasta.empty()) pasta = "./docs";
 
-    // 4. Mostra o resultado
-    std::cout << "=== PALAVRAS PROCESSADAS (sem stop words e limpas) ===\n";
-    if (palavras.empty()) {
-        std::cout << "(nenhuma palavra encontrada - talvez stopwords.txt esteja faltando?)\n";
-    } else {
-        for (const auto& p : palavras) {
-            std::cout << p << "\n";
-        }
+    // Lê arquivos da pasta e processa tudo
+    indexador.lerPasta(pasta);
+
+    // Salva para não precisar reindexar depois
+    Serializer::salvar(indexador, "index.bin");
+
+    // Constrói índice invertido
+    InvertedIndex inv;
+    inv.construir(indexador);
+
+    // Loop de consultas
+    while (true) {
+        std::cout << "\nConsulta (ou 'sair'): ";
+        string linha;
+        std::getline(std::cin, linha);
+
+        if (linha == "sair") break;
+
+        // Normaliza a consulta
+        vector<string> termos =
+            indexador.processador.processarLinha(linha);
+
+        // Exibe documentos encontrados
+        inv.buscar(termos, indexador);
     }
 
-    // 5. Teste extra: lendo um arquivo .txt real (opcional)
-    std::cout << "\n\n=== TESTANDO COM ARQUIVO REAL ===\n";
-    std::ifstream arquivo("doc1.txt");  // cria um doc1.txt na pasta do projeto pra testar
-    if (arquivo) {
-        std::string conteudo((std::istreambuf_iterator<char>(arquivo)),
-                              std::istreambuf_iterator<char>());
-        auto palavras_arquivo = tp.process(conteudo);
-        std::cout << "Palavras encontradas em doc1.txt:\n";
-        for (const auto& p : palavras_arquivo) {
-            std::cout << p << " ";
-        }
-        std::cout << "\n";
-    } else {
-        std::cout << "Crie um arquivo 'doc1.txt' na mesma pasta pra testar leitura de arquivo.\n";
-    }
-
-
-    Indexer meuIndexer;
-    
-    // Certifica-te de ter esta pasta criada com arquivos .txt dentro
-    meuIndexer.lerArquivos("/.stopwords.txt");
-    
-    meuIndexer.imprimirTudo();
-    system("Pauase");
     return 0;
 }
